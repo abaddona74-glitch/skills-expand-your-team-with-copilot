@@ -472,6 +472,83 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Function to create share buttons HTML
+  function createShareButtons(activityName, description) {
+    const activityUrl = `${window.location.origin}/static/index.html`;
+    const shareText = `Check out ${activityName} at Mergington High School! ${description}`;
+    
+    return `
+      <div class="share-container">
+        <span class="share-label">Share:</span>
+        <button class="share-button twitter tooltip" data-share-type="twitter" data-activity="${activityName}" data-description="${description}" aria-label="Share on Twitter">
+          𝕏
+          <span class="tooltip-text">Share on X/Twitter</span>
+        </button>
+        <button class="share-button facebook tooltip" data-share-type="facebook" data-activity="${activityName}" data-description="${description}" aria-label="Share on Facebook">
+          f
+          <span class="tooltip-text">Share on Facebook</span>
+        </button>
+        <button class="share-button linkedin tooltip" data-share-type="linkedin" data-activity="${activityName}" data-description="${description}" aria-label="Share on LinkedIn">
+          in
+          <span class="tooltip-text">Share on LinkedIn</span>
+        </button>
+        <button class="share-button copy-link tooltip" data-share-type="copy" data-activity="${activityName}" data-description="${description}" aria-label="Copy link">
+          🔗
+          <span class="tooltip-text">Copy link</span>
+        </button>
+      </div>
+    `;
+  }
+
+  // Function to handle social sharing
+  function handleShare(event) {
+    const button = event.currentTarget;
+    const shareType = button.dataset.shareType;
+    const activityName = button.dataset.activity;
+    const description = button.dataset.description;
+    
+    const activityUrl = `${window.location.origin}/static/index.html`;
+    const shareText = `Check out ${activityName} at Mergington High School! ${description}`;
+    
+    switch (shareType) {
+      case 'twitter':
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(activityUrl)}`;
+        window.open(twitterUrl, '_blank', 'width=550,height=420');
+        break;
+        
+      case 'facebook':
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(activityUrl)}&quote=${encodeURIComponent(shareText)}`;
+        window.open(facebookUrl, '_blank', 'width=550,height=420');
+        break;
+        
+      case 'linkedin':
+        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(activityUrl)}`;
+        window.open(linkedinUrl, '_blank', 'width=550,height=420');
+        break;
+        
+      case 'copy':
+        // Copy link to clipboard
+        const textToCopy = `${shareText}\n${activityUrl}`;
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          // Visual feedback
+          const originalText = button.innerHTML;
+          button.classList.add('copied');
+          button.innerHTML = '✓<span class="tooltip-text">Copied!</span>';
+          
+          setTimeout(() => {
+            button.classList.remove('copied');
+            button.innerHTML = originalText;
+          }, 2000);
+          
+          showMessage('Link copied to clipboard!', 'success');
+        }).catch(err => {
+          console.error('Failed to copy:', err);
+          showMessage('Failed to copy link', 'error');
+        });
+        break;
+    }
+  }
+
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
@@ -568,6 +645,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `
         }
+        ${createShareButtons(name, details.description)}
       </div>
     `;
 
@@ -586,6 +664,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll(".share-button");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", handleShare);
+    });
 
     activitiesList.appendChild(activityCard);
   }
